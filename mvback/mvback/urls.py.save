@@ -1,0 +1,721 @@
+"""mvback URL Configuration
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/1.11/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  url(r'^$', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  url(r'^$', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.conf.urls import url, include
+    2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
+"""
+from django.conf.urls import url
+from django.contrib import admin
+from django.urls import path, include
+from rest_framework import routers
+from mvback import views
+
+router = routers.DefaultRouter()
+router.register(r'Director', views.DirectorView, 'Director')
+router.register(r'Movie', views.MovieView, 'Movie')
+router.register(r'Actor', views.ActorView, 'Actor')
+router.register(r'User', views.UserView, 'User')
+
+urlpatterns = [
+path('admin/', admin.site.urls),         path('api/', include(router.urls))                # add this
+    ]
+
+This is the final step that completes the building of the API, we can now perform CRUD operations on the Todo model. The router class allows us to make the following queries:
+
+    /todos/ - This returns a list of all the Todo items (Create and Read operations can be done here).
+
+    /todos/id - this returns a single Todo item using the id primary key (Update and Delete operations can be done here).
+
+Let’s restart the server and visit this address — http://localhost:8000/api/todos:
+
+$ python manage.py runserver
+
+We can create a new todo item using the interface:
+
+If the Todo item is created successfully, you will see a screen like this:
+
+We can also perform DELETE and UPDATE operations on specific Todo items using their id primary keys. To do this, we will visit an address with this structure /api/todos/id. Let’s try with this address — http://localhost:8000/api/todos/1:
+
+That’s all for the backend of the application, now we can move on to fleshing out the frontend.
+Setting up the frontend
+
+We have our backend running as it should, now we will create our frontend and make it communicate with the backend over the interface that we created.
+
+Since we are building our frontend using React, we want to use the create-react-app CLI tool because it registers optimal settings and several benefits such as Hot reloading and Service workers. We will install the create-react-app CLI (command line interface) tool globally with this command:
+
+$ npm install -g create-react-app
+
+Let’s navigate back into the parent working directory — django-todo-react — of our application and create a new React application called frontend:
+
+$ create-react-app frontend
+
+It will probably take a while for all of the dependencies to be installed, once it’s over, your terminal should look something like this:
+
+Run the following commands to navigate into the working directory and start the frontend server
+
+$ cd frontend
+$ yarn start
+
+    Note: If you don’t have Yarn installed, you can find installation instructions here.
+
+We can now visit this address — http://localhost:3000 — and we will see the default React screen:
+
+We will pull in bootstrap and reactstrap to spice the UI up a bit:
+
+$ yarn add bootstrap reactstrap
+
+Let’s open the src/index.css file and replace the styles there with this one:
+
+  /__ frontend/src/index.css  __/
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+        "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+        sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background-color: #282c34;
+    }
+    .todo-title {
+      cursor: pointer;
+    }
+    .completed-todo {
+      text-decoration: line-through;
+    }
+    .tab-list > span {
+      padding: 5px 8px;
+      border: 1px solid #282c34;
+      border-radius: 10px;
+      margin-right: 5px;
+      cursor: pointer;
+    }
+    .tab-list > span.active {
+      background-color: #282c34;
+      color: #ffffff;
+    }
+
+We will import Bootstrap’s stylesheet in src/index.js so that we can use Bootstrap’s classes:
+
+
+      // frontend/src/index.js
+
+      import React from 'react';
+      import ReactDOM from 'react-dom';
+      import 'bootstrap/dist/css/bootstrap.min.css';       // add this
+      import './index.css';
+      import App from './App';
+      import * as serviceWorker from './serviceWorker';
+
+      ReactDOM.render(<App />, document.getElementById('root'));
+      // If you want your app to work offline and load faster, you can change
+      // unregister() to register() below. Note this comes with some pitfalls.
+      // Learn more about service workers: http://bit.ly/CRA-PWA
+      serviceWorker.unregister();
+
+Let’s replace the code in src/App.js with this one:
+
+  // frontend/src/App.js
+
+    import React, { Component } from "react";
+    const todoItems = [
+      {
+        id: 1,
+        title: "Go to Market",
+        description: "Buy ingredients to prepare dinner",
+        completed: true
+      },
+      {
+        id: 2,
+        title: "Study",
+        description: "Read Algebra and History textbook for upcoming test",
+        completed: false
+      },
+      {
+        id: 3,
+        title: "Sally's books",
+        description: "Go to library to rent sally's books",
+        completed: true
+      },
+      {
+        id: 4,
+        title: "Article",
+        description: "Write article on how to use django with react",
+        completed: false
+      }
+    ];
+    class App extends Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          viewCompleted: false,
+          todoList: todoItems
+        };
+      }
+      displayCompleted = status => {
+        if (status) {
+          return this.setState({ viewCompleted: true });
+        }
+        return this.setState({ viewCompleted: false });
+      };
+      renderTabList = () => {
+        return (
+          <div className="my-5 tab-list">
+            <span
+              onClick={() => this.displayCompleted(true)}
+              className={this.state.viewCompleted ? "active" : ""}
+            >
+              complete
+            </span>
+            <span
+              onClick={() => this.displayCompleted(false)}
+              className={this.state.viewCompleted ? "" : "active"}
+            >
+              Incomplete
+            </span>
+          </div>
+        );
+      };
+      renderItems = () => {
+        const { viewCompleted } = this.state;
+        const newItems = this.state.todoList.filter(
+          item => item.completed == viewCompleted
+        );
+        return newItems.map(item => (
+          <li
+            key={item.id}
+            className="list-group-item d-flex justify-content-between align-items-center"
+          >
+            <span
+              className={`todo-title mr-2 ${
+                this.state.viewCompleted ? "completed-todo" : ""
+              }`}
+              title={item.description}
+            >
+              {item.title}
+            </span>
+            <span>
+              <button className="btn btn-secondary mr-2"> Edit </button>
+              <button className="btn btn-danger">Delete </button>
+            </span>
+          </li>
+        ));
+      };
+      render() {
+        return (
+          <main className="content">
+            <h1 className="text-white text-uppercase text-center my-4">Todo app</h1>
+            <div className="row ">
+              <div className="col-md-6 col-sm-10 mx-auto p-0">
+                <div className="card p-3">
+                  <div className="">
+                    <button className="btn btn-primary">Add task</button>
+                  </div>
+                  {this.renderTabList()}
+                  <ul className="list-group list-group-flush">
+                    {this.renderItems()}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </main>
+        );
+      }
+    }
+    export default App;
+
+Okay, that’s a lot of code 😅, but there’s no need to be afraid now, we haven’t started interacting with the backend API, so we included default values to populate the Todo list. The `renderTabList()` function renders two spans which help control which set of items are displayed i.e clicking on the completed tab shows completed tasks and the same for the incomplete tab.
+
+If we visit the React frontend application now, it will look like this:
+
+To handle actions such as adding and editing tasks, we will use a modal, so let's create a Modal component in a components folder.
+
+Create a components folder in the src directory:
+
+$ mkdir src/components
+
+Create a Modal.js file in the components folder:
+
+$ touch src/components/Modal.js
+
+Open the Modal.js file and populate it with the code snippet below:
+
+ // frontend/src/components/Modal.js
+
+    import React, { Component } from "react";
+    import {
+      Button,
+      Modal,
+      ModalHeader,
+      ModalBody,
+      ModalFooter,
+      Form,
+      FormGroup,
+      Input,
+      Label
+    } from "reactstrap";
+
+    export default class CustomModal extends Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          activeItem: this.props.activeItem
+        };
+      }
+      handleChange = e => {
+        let { name, value } = e.target;
+        if (e.target.type === "checkbox") {
+          value = e.target.checked;
+        }
+        const activeItem = { ...this.state.activeItem, [name]: value };
+        this.setState({ activeItem });
+      };
+      render() {
+        const { toggle, onSave } = this.props;
+        return (
+          <Modal isOpen={true} toggle={toggle}>
+            <ModalHeader toggle={toggle}> Todo Item </ModalHeader>
+            <ModalBody>
+              <Form>
+                <FormGroup>
+                  <Label for="title">Title</Label>
+                  <Input
+                    type="text"
+                    name="title"
+                    value={this.state.activeItem.title}
+                    onChange={this.handleChange}
+                    placeholder="Enter Todo Title"
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label for="description">Description</Label>
+                  <Input
+                    type="text"
+                    name="description"
+                    value={this.state.activeItem.description}
+                    onChange={this.handleChange}
+                    placeholder="Enter Todo description"
+                  />
+                </FormGroup>
+                <FormGroup check>
+                  <Label for="completed">
+                    <Input
+                      type="checkbox"
+                      name="completed"
+                      checked={this.state.activeItem.completed}
+                      onChange={this.handleChange}
+                    />
+                    Completed
+                  </Label>
+                </FormGroup>
+              </Form>
+            </ModalBody>
+            <ModalFooter>
+              <Button color="success" onClick={() => onSave(this.state.activeItem)}>
+                Save
+              </Button>
+            </ModalFooter>
+          </Modal>
+        );
+      }
+    }
+
+We created a CustomModal class and it nests the Modal component that is derived from the reactstrap library. We also defined three fields in the form:
+
+    Title
+
+    Description
+
+    Completed
+
+    These are the same fields that we defined as properties on the Todo model in the backend.
+
+Here’s how the CustomModal works, it receives activeItem, toggle and onSave as props.
+
+    activeItem represents the Todo item to be edited.
+    toggle is a function used to control the Modal’s state i.e open or close the modal.
+    onSave is a function that is called to save the edited values of the Todo item.
+
+Next, we will import the CustomModal component into the App.js file. Head over to the src/App.js file and replace it completely with this updated version:
+
+  // frontend/src/App.js
+
+    import React, { Component } from "react";
+    import Modal from "./components/Modal";
+
+    const todoItems = [
+      {
+        id: 1,
+        title: "Go to Market",
+        description: "Buy ingredients to prepare dinner",
+        completed: true
+      },
+      {
+        id: 2,
+        title: "Study",
+        description: "Read Algebra and History textbook for upcoming test",
+        completed: false
+      },
+      {
+        id: 3,
+        title: "Sally's books",
+        description: "Go to library to rent sally's books",
+        completed: true
+      },
+      {
+        id: 4,
+        title: "Article",
+        description: "Write article on how to use django with react",
+        completed: false
+      }
+    ];
+    class App extends Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          modal: false,
+          viewCompleted: false,
+          activeItem: {
+            title: "",
+            description: "",
+            completed: false
+          },
+          todoList: todoItems
+        };
+      }
+      toggle = () => {
+        this.setState({ modal: !this.state.modal });
+      };
+      handleSubmit = item => {
+        this.toggle();
+        alert("save" + JSON.stringify(item));
+      };
+      handleDelete = item => {
+        alert("delete" + JSON.stringify(item));
+      };
+      createItem = () => {
+        const item = { title: "", description: "", completed: false };
+        this.setState({ activeItem: item, modal: !this.state.modal });
+      };
+      editItem = item => {
+        this.setState({ activeItem: item, modal: !this.state.modal });
+      };
+      displayCompleted = status => {
+        if (status) {
+          return this.setState({ viewCompleted: true });
+        }
+        return this.setState({ viewCompleted: false });
+      };
+      renderTabList = () => {
+        return (
+          <div className="my-5 tab-list">
+            <span
+              onClick={() => this.displayCompleted(true)}
+              className={this.state.viewCompleted ? "active" : ""}
+            >
+              complete
+            </span>
+            <span
+              onClick={() => this.displayCompleted(false)}
+              className={this.state.viewCompleted ? "" : "active"}
+            >
+              Incomplete
+            </span>
+          </div>
+        );
+      };
+      renderItems = () => {
+        const { viewCompleted } = this.state;
+        const newItems = this.state.todoList.filter(
+          item => item.completed === viewCompleted
+        );
+        return newItems.map(item => (
+          <li
+            key={item.id}
+            className="list-group-item d-flex justify-content-between align-items-center"
+          >
+            <span
+              className={`todo-title mr-2 ${
+                this.state.viewCompleted ? "completed-todo" : ""
+              }`}
+              title={item.description}
+            >
+              {item.title}
+            </span>
+            <span>
+              <button
+                onClick={() => this.editItem(item)}
+                className="btn btn-secondary mr-2"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => this.handleDelete(item)}
+                className="btn btn-danger"
+              >
+                Delete
+              </button>
+            </span>
+          </li>
+        ));
+      };
+      render() {
+        return (
+          <main className="content">
+            <h1 className="text-white text-uppercase text-center my-4">Todo app</h1>
+            <div className="row ">
+              <div className="col-md-6 col-sm-10 mx-auto p-0">
+                <div className="card p-3">
+                  <div className="">
+                    <button onClick={this.createItem} className="btn btn-primary">
+                      Add task
+                    </button>
+                  </div>
+                  {this.renderTabList()}
+                  <ul className="list-group list-group-flush">
+                    {this.renderItems()}
+                  </ul>
+                </div>
+              </div>
+            </div>
+            {this.state.modal ? (
+              <Modal
+                activeItem={this.state.activeItem}
+                toggle={this.toggle}
+                onSave={this.handleSubmit}
+              />
+            ) : null}
+          </main>
+        );
+      }
+    }
+    export default App;
+
+We can now revisit the React frontend, this is what the application should resemble at this point:
+
+If we attempt to edit and save a Todo item, we will get an alert showing the Todo item’s object. Clicking on save, and delete will perform the fitting actions on the Todo item.
+
+We will now modify the application so that it interacts with the Django API we built in the previous section. Let’s start by starting up the backend server (on a different instance of the terminal) if it isn’t already running:
+
+$ python manage.py runserver
+
+    Note: This command has to be run in the `backend` directory in a virtual Pipenv shell.
+
+For us to make requests to the API endpoints on the backend server, we will install a JavaScript library called axios. Let’s pull in `axios using Yarn:
+
+$ yarn add axios
+
+Once axios is successfully installed, head over to the frontend/package.json file and add a proxy like so:
+
+      // frontend/package.json
+
+      [...]       "name": "frontend",
+      "version": "0.1.0",
+      "private": true,
+      "proxy": "http://localhost:8000",
+      "dependencies": {
+        "axios": "^0.18.0",
+        "bootstrap": "^4.1.3",
+        "react": "^16.5.2",
+        "react-dom": "^16.5.2",
+        "react-scripts": "2.0.5",
+        "reactstrap": "^6.5.0"
+      },
+      [...]
+
+The proxy will help in tunnelling API requests to http://localhost:8000 where the Django application will handle them, so we can write the requests like this in the frontend:
+
+axios.get("/api/todos/")
+
+Instead of this:
+
+axios.get("http://localhost:8000/api/todos/")
+
+    Note: You might need to restart the development server for the proxy to register with the application.
+
+We will modify the frontend/src/App.js one last time so that it doesn’t use the hardcoded items from the array anymore, but requests data from the backend server and lists them instead. We want to also ensure that all CRUD operations send requests to the backend server instead of interacting with the dummy data.
+
+Open the file and replace it with this final version:
+
+ // frontend/src/App.js
+
+    import React, { Component } from "react";
+    import Modal from "./components/Modal";
+    import axios from "axios";
+
+    class App extends Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          viewCompleted: false,
+          activeItem: {
+            title: "",
+            description: "",
+            completed: false
+          },
+          todoList: []
+        };
+      }
+      componentDidMount() {
+        this.refreshList();
+      }
+      refreshList = () => {
+        axios
+          .get("http://localhost:8000/api/todos/")
+          .then(res => this.setState({ todoList: res.data }))
+          .catch(err => console.log(err));
+      };
+      displayCompleted = status => {
+        if (status) {
+          return this.setState({ viewCompleted: true });
+        }
+        return this.setState({ viewCompleted: false });
+      };
+      renderTabList = () => {
+        return (
+          <div className="my-5 tab-list">
+            <span
+              onClick={() => this.displayCompleted(true)}
+              className={this.state.viewCompleted ? "active" : ""}
+            >
+              complete
+            </span>
+            <span
+              onClick={() => this.displayCompleted(false)}
+              className={this.state.viewCompleted ? "" : "active"}
+            >
+              Incomplete
+            </span>
+          </div>
+        );
+      };
+      renderItems = () => {
+        const { viewCompleted } = this.state;
+        const newItems = this.state.todoList.filter(
+          item => item.completed === viewCompleted
+        );
+        return newItems.map(item => (
+          <li
+            key={item.id}
+            className="list-group-item d-flex justify-content-between align-items-center"
+          >
+            <span
+              className={`todo-title mr-2 ${
+                this.state.viewCompleted ? "completed-todo" : ""
+              }`}
+              title={item.description}
+            >
+              {item.title}
+            </span>
+            <span>
+              <button
+                onClick={() => this.editItem(item)}
+                className="btn btn-secondary mr-2"
+              >
+                {" "}
+                Edit{" "}
+              </button>
+              <button
+                onClick={() => this.handleDelete(item)}
+                className="btn btn-danger"
+              >
+                Delete{" "}
+              </button>
+            </span>
+          </li>
+        ));
+      };
+      toggle = () => {
+        this.setState({ modal: !this.state.modal });
+      };
+      handleSubmit = item => {
+        this.toggle();
+        if (item.id) {
+          axios
+            .put(`http://localhost:8000/api/todos/${item.id}/`, item)
+            .then(res => this.refreshList());
+          return;
+        }
+        axios
+          .post("http://localhost:8000/api/todos/", item)
+          .then(res => this.refreshList());
+      };
+      handleDelete = item => {
+        axios
+          .delete(`http://localhost:8000/api/todos/${item.id}`)
+          .then(res => this.refreshList());
+      };
+      createItem = () => {
+        const item = { title: "", description: "", completed: false };
+        this.setState({ activeItem: item, modal: !this.state.modal });
+      };
+      editItem = item => {
+        this.setState({ activeItem: item, modal: !this.state.modal });
+      };
+      render() {
+        return (
+          <main className="content">
+            <h1 className="text-white text-uppercase text-center my-4">Todo app</h1>
+            <div className="row ">
+              <div className="col-md-6 col-sm-10 mx-auto p-0">
+                <div className="card p-3">
+                  <div className="">
+                    <button onClick={this.createItem} className="btn btn-primary">
+                      Add task
+                    </button>
+                  </div>
+                  {this.renderTabList()}
+                  <ul className="list-group list-group-flush">
+                    {this.renderItems()}
+                  </ul>
+                </div>
+              </div>
+            </div>
+            {this.state.modal ? (
+              <Modal
+                activeItem={this.state.activeItem}
+                toggle={this.toggle}
+                onSave={this.handleSubmit}
+              />
+            ) : null}
+          </main>
+        );
+      }
+    }
+    export default App;
+
+The refreshList() function is reusable that is called each time an API request is completed. It updates the Todo list to display the most recent list of added items.
+
+The handleSubmit() function takes care of both the create and update operations. If the item passed as the parameter doesn’t have an id, then it has probably not been created, so the function creates it.
+
+Congratulations! We have just built the fontend successfully.
+Testing the application
+
+Let’s start the backend server on a terminal instance that’s sourced into the Pipenv virtual shell and pointed to the backend directory:
+
+$ python manage.py runserver
+
+We also need to start the frontend development server:
+
+$ yarn start
+
+We can visit the application on this address — http://localhost:3000 — to see that it works:
+
+We’ve come to the end of this tutorial and learnt how to configure Django and React to interact correctly with each other. We also saw some of the benefits that come with bootstrapping a React application using the create-react-app tool, such as Hot-reloading which is basically the feature that makes it possible for the web app to reload on its own whenever a change is detected.
+
+The source code for this tutorial is available here on GitHub.
+
+Like this article? Follow @JordanIrabor on Twitter
+Read next...
+
+]

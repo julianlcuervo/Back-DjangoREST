@@ -1,0 +1,11 @@
+stages:
+  - test
+
+test:
+  stage: test
+  script:
+    - apt-get update -qy
+    - apt-get install -y python3-pip
+    - pip3 install -r requirements.txt
+    - cd mysite  
+    - python3 manage.py test --settings mysite.test_settings
