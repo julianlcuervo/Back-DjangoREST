@@ -36,7 +36,15 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('Name','Email','Password','IDUser')
-        
+        extra_kwargs = {'Password': {'write_only': True}}
+
+    def create(self, validated_data):
+        user = User.objects.create(**validated_data)
+        user.set_password(validated_data['Password'])
+        user.save()
+        return user
+
+
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -53,4 +61,3 @@ class CommentSerializer(serializers.ModelSerializer):
         instance.userName = validated_data.get('userName',instance.userName)
         instance.save()
         return instance
-
