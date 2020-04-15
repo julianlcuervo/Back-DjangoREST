@@ -1,4 +1,4 @@
-
+import hashlib
 from rest_framework import serializers
 from .models import Director, Movie, Actor, User, Comment
 class DirectorSerializer(serializers.ModelSerializer):
@@ -40,7 +40,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = User.objects.create(**validated_data)
-        user.set_password(validated_data['Password'])
+        user.Password = hashlib.sha256(validated_data['Password'].encode()).hexdigest()
         user.save()
         return user
 
