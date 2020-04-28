@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 from mvback import views
+from .views import Login
 
 router = routers.DefaultRouter()
 router.register(r'Director', views.DirectorView, 'Director')
@@ -25,6 +26,7 @@ router.register(r'Movie', views.MovieView, 'Movie')
 router.register(r'Actor', views.ActorView, 'Actor')
 router.register(r'User', views.UserView, 'User')
 router.register(r'Comment', views.CommentView, 'Comment')
+router.register(r'Login', Login, 'Login')
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),        path('api/', include(router.urls))

@@ -5,6 +5,12 @@ from rest_framework import viewsets          # add this
 from rest_framework.response import Response
 from .serializers import DirectorSerializer, MovieSerializer, ActorSerializer, UserSerializer, CommentSerializer    # add this
 from .models import Director,Movie ,Actor, User, Comment              # add this
+from rest_framework.views import APIView
+from rest_framework import status
+import hashlib
+from rest_framework import mixins, viewsets
+from .serializers import LoginSerializer
+
 
 
 class DirectorView(viewsets.ModelViewSet):# add this
@@ -38,3 +44,14 @@ class CommentView(viewsets.ModelViewSet):
         if serializer.is_valid(raise_exception=True):
             comment_saved = serializer.save()
         return Response({"success:" "Comment '{}' updated successfully".format(comment_saved.title)})
+
+class Login(mixins.CreateModelMixin,viewsets.GenericViewSet):
+    serializer_class = LoginSerializer
+    queryset = User.objects.all()
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+       
+
+
+        
+    

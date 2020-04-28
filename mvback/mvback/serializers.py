@@ -41,8 +41,11 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = User.objects.create(**validated_data)
         user.Password = hashlib.sha256(validated_data['Password'].encode()).hexdigest()
+        #user.set_password(validated_data['Password'])
         user.save()
         return user
+    
+
 
 
 
@@ -61,3 +64,17 @@ class CommentSerializer(serializers.ModelSerializer):
         instance.userName = validated_data.get('userName',instance.userName)
         instance.save()
         return instance
+
+class LoginSerializer(serializers.Serializer):
+    Password = serializers.CharField(max_length=150, allow_blank=False, allow_null=False) 
+    Email = serializers.EmailField(max_length=None, min_length=None, allow_blank=False)
+    def create(self, validated_data):
+        try:
+            password = hashlib.sha256(validated_data['Password'].encode()).hexdigest()
+            user = User.objects.get(Email=validated_data['Email'])
+            if password == user.Password:
+                return user
+            else:
+                raise serializers.ValidationError('Credenciales incorrectas')
+        except User.DoesNotExist:
+            raise serializers.ValidationError('No existe el usuario')
