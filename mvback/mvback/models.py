@@ -14,7 +14,7 @@ class Movie(models.Model):
     language = models.TextField()
     year = models.IntegerField()
     contentRating = models.TextField()
-    duration = models.IntegerField()
+    duration = models.FloatField()
     cover = models.TextField()
     description = models.TextField()
     source = models.TextField()
@@ -22,7 +22,6 @@ class Movie(models.Model):
     
     def _str_(self):
         return self.title+" ID: "+self.idMovie
-
 
 class Actor(models.Model):
     NameAc = models.TextField()
@@ -32,7 +31,7 @@ class Actor(models.Model):
 
 class User(models.Model):
     Name = models.TextField()
-    Email = models.EmailField(max_length=254)
+    Email = models.EmailField(max_length=254,unique=True,error_messages ={'unique':"Este correo ya se encuentra registrado."})
     Password = models.TextField()
     IDUser = models.AutoField(primary_key=True)
     
@@ -43,3 +42,9 @@ class Comment(models.Model):
     idMovie = models.IntegerField()
     text = models.TextField()
     userName= models.TextField()
+
+class Rating(models.Model):
+    id = models.AutoField(primary_key=True)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE,null=False)
+    movie_id = models.ForeignKey(Movie, on_delete=models.CASCADE,null=False)
+    rating = models.BooleanField()
