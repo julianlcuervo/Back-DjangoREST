@@ -31,7 +31,7 @@ class Actor(models.Model):
 
 class User(models.Model):
     Name = models.TextField()
-    Email = models.EmailField(max_length=254)
+    Email = models.EmailField(max_length=254,unique=True,error_messages ={'unique':"Este correo ya se encuentra registrado."})
     Password = models.TextField()
     IDUser = models.AutoField(primary_key=True)
     
