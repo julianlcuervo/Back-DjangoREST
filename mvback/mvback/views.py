@@ -4,12 +4,14 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework import viewsets          # add this
 from rest_framework.response import Response
 from .serializers import DirectorSerializer, MovieSerializer, ActorSerializer, UserSerializer, CommentSerializer    # add this
-from .models import Director,Movie ,Actor, User, Comment              # add this
+from .models import Director,Movie ,Actor, User, Comment,Rating              # add this
 from rest_framework.views import APIView
 from rest_framework import status
 import hashlib
 from rest_framework import mixins, viewsets
 from .serializers import LoginSerializer
+from .serializers import RatingSerializer
+
 
 
 
@@ -50,7 +52,11 @@ class Login(mixins.CreateModelMixin,viewsets.GenericViewSet):
     queryset = User.objects.all()
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
-       
+    
+class RatingView(viewsets.ModelViewSet):
+    serializer_class = RatingSerializer
+    queryset = Rating.objects.all()
+
 
 
         

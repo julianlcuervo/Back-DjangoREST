@@ -1,6 +1,6 @@
 import hashlib
 from rest_framework import serializers
-from .models import Director, Movie, Actor, User, Comment
+from .models import Director, Movie, Actor, User, Comment,Rating
 class DirectorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Director
@@ -78,3 +78,9 @@ class LoginSerializer(serializers.Serializer):
                 raise serializers.ValidationError('Credenciales incorrectas')
         except User.DoesNotExist:
             raise serializers.ValidationError('No existe el usuario')
+
+class RatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Rating
+        fields='__all__'
+

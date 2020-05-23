@@ -27,6 +27,8 @@ router.register(r'Actor', views.ActorView, 'Actor')
 router.register(r'User', views.UserView, 'User')
 router.register(r'Comment', views.CommentView, 'Comment')
 router.register(r'Login', Login, 'Login')
+router.register(r'Rating', views.RatingView, 'Rating')
+
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),        path('api/', include(router.urls))
